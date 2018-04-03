@@ -9,6 +9,10 @@ const router = express.Router();
 const port = process.env.PORT || 8088;
 const API_KEY = process.env.API_KEY;
 
+if (API_KEY === undefined) {
+  throw `Missing API_KEY environment variable. Cannot start API.`;
+}
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
@@ -25,13 +29,13 @@ router.use((req, res, next) => {
 
 router.route('/images')
   .get((req, res) => {
-    let { search, page = 1 } = req.query;
+    const { q, page = 1 } = req.query;
 
-    if (!search) {
+    if (!q) {
       return res.json([]);
     }
 
-    let url = getFlickrUrl('method=flickr.photos.search', `text=${search}`, 'per_page=16', `page=${page}`);
+    const url = getFlickrUrl('method=flickr.photos.search', `text=${q}`, 'per_page=16', `page=${page}`);
 
     return get(url)
       .then(json => json.photos)
@@ -40,7 +44,7 @@ router.route('/images')
           return [];
         }
 
-        let promises = photos.map(photo => {
+        const promises = photos.map(photo => {
           return getImageUrl(photo.id).then(url => {
             return {
               id: photo.id,
@@ -58,7 +62,7 @@ router.route('/images')
   });
 
 function getImageUrl(id) {
-  let url = getFlickrUrl('method=flickr.photos.getSizes', `photo_id=${id}`);
+  const url = getFlickrUrl('method=flickr.photos.getSizes', `photo_id=${id}`);
   return get(url)
     .then(json => {
       let medium;
@@ -79,7 +83,7 @@ function getImageUrl(id) {
 
 router.route('/images/:id/details/')
   .get((req, res) => {
-    let { id } = req.params;
+    const { id } = req.params;
     
     Promise.all([getImageDetails(id), getImageUrl(id)])
       .then(([imageDetails, imageUrl]) => {
@@ -90,11 +94,11 @@ router.route('/images/:id/details/')
   });
 
 function getImageDetails(id) {
-  let url = getFlickrUrl('method=flickr.photos.getInfo', `photo_id=${id}`);
+  const url = getFlickrUrl('method=flickr.photos.getInfo', `photo_id=${id}`);
 
   return get(url)
     .then(result => {
-      let { id, title, description, dates, tags } = result.photo;
+      const { id, title, description, dates, tags } = result.photo;
       return {
         id: id._content,
         title: title._content,
