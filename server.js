@@ -7,10 +7,10 @@ const app = express();
 const router = express.Router();
 
 const port = process.env.PORT || 8088;
-const API_KEY = process.env.API_KEY || 'b09fb8d8f7679bc3c876a5de2cb3f35c';
+const API_KEY = process.env.API_KEY;
 
-if (process.env.API_KEY === undefined) {
-  console.warn('Missing API_KEY environment variable. Falling back on default value');
+if (API_KEY === undefined) {
+  throw 'Missing API_KEY environment variable. Falling back on default value';
 }
 
 app.use(bodyParser.urlencoded({extended: true}));
